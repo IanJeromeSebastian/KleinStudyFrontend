@@ -12,6 +12,7 @@ import ChatInterface from '../../components/chat/ChatInterface';
 import AIActions from '../../components/ai/AIActions';
 import FlashcardManager from '../../components/flashcards/FlashcardManager';
 import QuizManager from '../../components/quizzes/QuizManager';
+import { BASE_URL } from '../../utils/apiPaths';
 
 const DocumentDetailPage = () => {
 
@@ -45,9 +46,8 @@ const DocumentDetailPage = () => {
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
       return filePath;
     }
-
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    return `${baseUrl}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+    
+    return `${BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
   };
 
   const renderContent = () => {
