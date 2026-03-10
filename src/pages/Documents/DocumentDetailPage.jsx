@@ -20,6 +20,7 @@ const DocumentDetailPage = () => {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Content');
+  const [pdfUrl, setIsPdfUrl] = useState();
 
   useEffect(() => {
     const fetchDocumentDetails = async () => {
@@ -32,22 +33,23 @@ const DocumentDetailPage = () => {
         console.error(error);
       } finally {
         setLoading(false);
+        setIsPdfUrl(getPdfUrl());
       }
     };
 
     fetchDocumentDetails();
-  }, [id]);
+  }, [id, pdfUrl]);
 
   const getPdfUrl = () => {
+    console.log('taas', document);
     if (!document?.data?.filePath) return null;
 
-    const filePath = document.data.filePath;
+    let filePath = document.data.filePath;
 
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
-    }
-    
-    return `${BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+    filePath.replace(' ', "%20")
+    const baseUrl = BASE_URL || 'http://localhost:8000';
+
+    return `${baseUrl}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
   };
 
   const renderContent = () => {
@@ -63,49 +65,47 @@ const DocumentDetailPage = () => {
       );
     }
 
-    const pdfUrl = getPdfUrl();
-
-    return(
+    return (
       <div className='bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm'>
         <div className='flex items-center justify-between p-4 bg-gray-50 border-b border-gray-300'>
           <span className='text-sm font-medium text-gray-700'>Document Viewer</span>
-          <a 
+          <a
             href={pdfUrl}
             target='_blank'
             rel='noopener noreferrer'
             className='inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors'>
-              <ExternalLink size={16}/>
-                Open in new Tab
-            </a>
+            <ExternalLink size={16} />
+            Open in new Tab
+          </a>
         </div>
         <div className='bg-gray-100 p-1'>
-          <iframe 
-            src={pdfUrl} 
+          <iframe
+            src={pdfUrl}
             frameBorder="0"
             className='w-full h-[70vh] bg-white rounded border border-gray-300'
             title='PDF Viewer'
             style={{
               colorScheme: 'light',
-            }}/>
+            }} />
         </div>
       </div>
     );
   };
 
-  const renderChat = () =>{
-    return <ChatInterface/>
+  const renderChat = () => {
+    return <ChatInterface />
   };
 
-  const renderAIActions = () =>{
-    return <AIActions/>
+  const renderAIActions = () => {
+    return <AIActions />
   };
 
-  const renderFlashcardsTab = () =>{
-    return <FlashcardManager documentId={id}/>
+  const renderFlashcardsTab = () => {
+    return <FlashcardManager documentId={id} />
   };
 
-  const renderQuizzesTab = () =>{
-    return <QuizManager documentId={id}/>
+  const renderQuizzesTab = () => {
+    return <QuizManager documentId={id} />
   };
 
   const tabs = [
@@ -120,20 +120,20 @@ const DocumentDetailPage = () => {
     return <Spinner />;
   }
 
-  if(!document){
+  if (!document) {
     return <div className='text-center p-8'>Document not found.</div>
   }
-    
+
   return (
     <div>
       <div className='mb-4'>
         <Link to="/documents" className='inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors'>
-          <ArrowLeft size={16}/>
+          <ArrowLeft size={16} />
           Back to Documents
         </Link>
       </div>
-      <PageHeader title={document.data.title}/>
-      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab}/>
+      <PageHeader title={document.data.title} />
+      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   )
 }
