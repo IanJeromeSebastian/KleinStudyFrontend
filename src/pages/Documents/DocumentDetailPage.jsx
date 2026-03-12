@@ -15,52 +15,56 @@ import QuizManager from '../../components/quizzes/QuizManager';
 import { BASE_URL } from '../../utils/apiPaths';
 
 const DocumentDetailPage = () => {
-
   const { id } = useParams();
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Content');
-  const [pdfUrl, setIsPdfUrl] = useState();
+  const [pdfUrl, setPdfUrl] = useState('');
 
   useEffect(() => {
     const fetchDocumentDetails = async () => {
       try {
-        const data = await documentService.getDocumentById(id);
-        setDocument(data);
-        console.log(data)
+        setLoading(true);
+        const response = await documentService.getDocumentById(id);
+        
+        // Assuming your backend returns { success: true, data: { ... } }
+        const docData = response.data || response; 
+        setDocument(response);
+
+        // Calculate PDF URL immediately upon fetching
+        if (docData && docData.filePath) {
+          const path = docData.filePath;
+          
+          // Logic: If it starts with http, it's Cloudinary. 
+          // Otherwise, it's a local path from your backend.
+          if (path.startsWith('http')) {
+            setPdfUrl(path);
+          } else {
+            const baseUrl = BASE_URL || 'http://localhost:8000';
+            const cleanPath = path.startsWith('/') ? path : `/${path}`;
+            setPdfUrl(`${baseUrl}${cleanPath}`);
+          }
+        }
       } catch (error) {
         toast.error('Failed to fetch document details.');
         console.error(error);
       } finally {
         setLoading(false);
-        setIsPdfUrl(getPdfUrl());
       }
     };
 
-    fetchDocumentDetails();
-  }, [id, pdfUrl]);
-
-  const getPdfUrl = () => {
-    console.log('taas', document);
-    if (!document?.data?.filePath) return null;
-
-    let filePath = document.data.filePath;
-
-    filePath.replace(' ', "%20")
-    const baseUrl = BASE_URL || 'http://localhost:8000';
-
-    return `${baseUrl}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
-  };
+    if (id) {
+      fetchDocumentDetails();
+    }
+  }, [id]);
 
   const renderContent = () => {
-    if (loading) {
-      return <Spinner />;
-    }
+    if (loading) return <Spinner />;
 
-    if (!document || !document.data || !document.data.filePath) {
+    if (!document || !pdfUrl) {
       return (
         <div className="text-center p-8">
-          <p>PDF not available or could not be loaded.</p>
+          <p className="text-gray-500">PDF not available or could not be loaded.</p>
         </div>
       );
     }
@@ -81,61 +85,50 @@ const DocumentDetailPage = () => {
         <div className='bg-gray-100 p-1'>
           <iframe
             src={pdfUrl}
-            frameBorder="0"
             className='w-full h-[70vh] bg-white rounded border border-gray-300'
             title='PDF Viewer'
-            style={{
-              colorScheme: 'light',
-            }} />
+            style={{ colorScheme: 'light' }}
+          />
         </div>
       </div>
     );
   };
 
-  const renderChat = () => {
-    return <ChatInterface />
-  };
-
-  const renderAIActions = () => {
-    return <AIActions />
-  };
-
-  const renderFlashcardsTab = () => {
-    return <FlashcardManager documentId={id} />
-  };
-
-  const renderQuizzesTab = () => {
-    return <QuizManager documentId={id} />
-  };
-
   const tabs = [
     { name: 'Content', label: 'Content', content: renderContent() },
-    { name: 'Chat', label: 'Chat', content: renderChat() },
-    { name: 'AI Actions', label: 'AI Actions', content: renderAIActions() },
-    { name: 'Flashcards', label: 'Flashcards', content: renderFlashcardsTab() },
-    { name: 'Quizzes', label: 'Quizzes', content: renderQuizzesTab() },
+    { name: 'Chat', label: 'Chat', content: <ChatInterface /> },
+    { name: 'AI Actions', label: 'AI Actions', content: <AIActions /> },
+    { name: 'Flashcards', label: 'Flashcards', content: <FlashcardManager documentId={id} /> },
+    { name: 'Quizzes', label: 'Quizzes', content: <QuizManager documentId={id} /> },
   ];
 
-  if (loading) {
-    return <Spinner />;
-  }
+  if (loading) return <Spinner />;
 
   if (!document) {
-    return <div className='text-center p-8'>Document not found.</div>
+    return (
+      <div className='text-center p-8'>
+        <p>Document not found.</p>
+        <Link to="/documents" className="text-blue-500 underline">Go back</Link>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 py-6">
       <div className='mb-4'>
         <Link to="/documents" className='inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors'>
           <ArrowLeft size={16} />
           Back to Documents
         </Link>
       </div>
-      <PageHeader title={document.data.title} />
-      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+      
+      <PageHeader title={document.data?.title || "Document Details"} />
+      
+      <div className="mt-6">
+        <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default DocumentDetailPage
+export default DocumentDetailPage;
