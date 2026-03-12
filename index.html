@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Klein Study</title>
+    <script>
+      // if the URL is noy localhost, hide the console completely
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        console.log = function () {};
+        console.info = function () {};
+        console.warn = function () {}; 
+        console.error = function () {};
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
