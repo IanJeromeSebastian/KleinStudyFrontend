@@ -39,10 +39,12 @@ const DocumentDetailPage = () => {
           // Otherwise, it's a local path from your backend.
           if (path.startsWith('http')) {
             setPdfUrl(path);
+            console.log("cleanpath")
           } else {
             const baseUrl = BASE_URL || 'http://localhost:8000';
             const cleanPath = path.startsWith('/') ? path : `/${path}`;
-            setPdfUrl(`${baseUrl}${cleanPath}`);
+            setPdfUrl(`${cleanPath}`);
+            console.log(cleanPath, "cleanpath")
           }
         }
       } catch (error) {
